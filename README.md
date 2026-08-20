@@ -82,6 +82,25 @@ File `ngoc_huyen.onnx` + `ngoc_huyen.onnx.json` **KHÔNG** có sẵn trong repo 
   setup.bat /voice "https://your-link/ngoc_huyen.onnx"
   ```
 
+### Git LFS (Large File Storage)
+File `ngoc_huyen.onnx` (~60MB) vượt quá giới hạn khuyến nghị 50MB của GitHub.
+Repo hiện tại commit trực tiếp (vẫn hoạt động), nhưng khuyến nghị dùng **Git LFS**:
+
+```cmd
+# Cài Git LFS (một lần)
+git lfs install
+
+# Theo dõi file lớn
+git lfs track "pipeline/ngoc_huyen.onnx"
+
+# Commit .gitattributes + model
+git add .gitattributes pipeline/ngoc_huyen.onnx
+git commit -m "chore: use LFS for voice model"
+git push
+```
+
+Sau khi bật LFS, file `.onnx` sẽ lưu trên server LFS thay vì trong Git history → repo nhẹ, clone nhanh hơn.
+
 ## Loanwords (Kho từ đọc)
 - **loanwords_vi.py**: 285+ từ cứng (sex→sét, anime→a ni me, cosplay→cót lay...)
 - **loanwords_dynamic.json**: Rỗng ban đầu — người dùng tự quét & thêm
