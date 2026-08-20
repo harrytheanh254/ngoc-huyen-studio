@@ -1,0 +1,43 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.python-version
+venv/
+env/
+.pytest_cache/
+
+# Install artifacts
+python/
+ffmpeg/
+piper/ngoc_huyen.onnx
+piper/ngoc_huyen.onnx.json
+7z.exe
+
+# Data & output
+preview/
+san-pham/
+upload_images/
+video_output/
+data/scan_draft.json
+
+# OS
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+*.lnk
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+
+# Installer temp
+*.zip
+*.7z
+*.tmp
