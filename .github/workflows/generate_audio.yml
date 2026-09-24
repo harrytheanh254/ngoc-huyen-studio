@@ -1,0 +1,66 @@
+name: Tao Audio Ngoc Huyen Piper TTS
+
+on:
+  workflow_dispatch:
+    inputs:
+      text_file:
+        description: 'Ten file kich ban (vi du: truyenchu.txt)'
+        required: true
+        default: 'truyenchu.txt'
+      speed_choice:
+        description: 'Chon toc do doc'
+        required: true
+        default: '1.0'
+        type: choice
+        options:
+        - '1.0 (Chuan 1.0x)'
+        - '1.25 (Nhanh 1.25x)'
+        - '1.5 (Nhanh 1.5x)'
+        - '2.0 (Nhanh 2.0x)'
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Lay ma nguon
+        uses: actions/checkout@v4
+
+      - name: Cai dat Python va ffmpeg
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Cai dat Piper TTS va ffmpeg
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+          pip install piper-tts
+
+      - name: Tao va Chinh toc do Audio MP3
+        run: |
+          FILE_NAME="${{ github.event.inputs.text_file }}"
+          SPEED_INPUT="${{ github.event.inputs.speed_choice }}"
+          SPEED=$(echo $SPEED_INPUT | awk '{print $1}')
+
+          # Chạy script chuyển đổi của dự án ngoc-huyen-studio
+          if [ -f "main.py" ]; then
+            python main.py --file "$FILE_NAME" --output temp_audio.wav || python main.py
+          elif [ -f "app.py" ]; then
+            python app.py --file "$FILE_NAME" || python app.py
+          fi
+
+          # Tìm file âm thanh tạm vừa được tạo ra
+          TEMP_FILE=$(ls *.wav *.mp3 2>/dev/null | head -n 1)
+
+          if [ -f "$TEMP_FILE" ]; then
+            echo "Dang chinh toc do doc sang ${SPEED}x..."
+            ffmpeg -i "$TEMP_FILE" -filter:a "atempo=$SPEED" -vn audio_ngoc_huyen.mp3 -y
+          else
+            echo "Khong tim thấy file audio đồn dau!"
+          fi
+
+      - name: Tai file MP3 ve
+        uses: actions/upload-artifact@v4
+        with:
+          name: audio-ngoc-huyen
+          path: audio_ngoc_huyen.mp3
