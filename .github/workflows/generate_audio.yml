@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       text_file:
-        description: 'Ten file kich ban (vi du: truyenchu.txt)'
+        description: 'Ten file kich ban'
         required: true
         default: 'truyenchu.txt'
       speed_choice:
@@ -30,33 +30,30 @@ jobs:
         with:
           python-version: '3.10'
 
-      - name: Cai dat Piper TTS va ffmpeg
+      - name: Cai dat thu vien phu thuoc
         run: |
           sudo apt-get update
           sudo apt-get install -y ffmpeg
-          pip install piper-tts
+          pip install piper-tts ffmpeg-python
+          if [ -f "requirements.txt" ]; then pip install -r requirements.txt; fi
 
-      - name: Tao va Chinh toc do Audio MP3
+      - name: Chay app.py tao audio
         run: |
           FILE_NAME="${{ github.event.inputs.text_file }}"
           SPEED_INPUT="${{ github.event.inputs.speed_choice }}"
           SPEED=$(echo $SPEED_INPUT | awk '{print $1}')
 
-          # Chạy script chuyển đổi của dự án ngoc-huyen-studio
-          if [ -f "main.py" ]; then
-            python main.py --file "$FILE_NAME" --output temp_audio.wav || python main.py
-          elif [ -f "app.py" ]; then
-            python app.py --file "$FILE_NAME" || python app.py
-          fi
+          # Chạy file app.py của repository ngoc-huyen-studio
+          python app.py --file "$FILE_NAME" || python app.py
 
-          # Tìm file âm thanh tạm vừa được tạo ra
+          # Tìm file audio vừa xuất ra
           TEMP_FILE=$(ls *.wav *.mp3 2>/dev/null | head -n 1)
 
-          if [ -f "$TEMP_FILE" ]; then
-            echo "Dang chinh toc do doc sang ${SPEED}x..."
+          if [ -n "$TEMP_FILE" ]; then
             ffmpeg -i "$TEMP_FILE" -filter:a "atempo=$SPEED" -vn audio_ngoc_huyen.mp3 -y
           else
-            echo "Khong tim thấy file audio đồn dau!"
+            echo "Khong tim thay file audio xuat ra tu app.py!"
+            exit 1
           fi
 
       - name: Tai file MP3 ve
