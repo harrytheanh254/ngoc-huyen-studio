@@ -33,28 +33,33 @@ jobs:
       - name: Cai dat thu vien phu thuoc
         run: |
           sudo apt-get update
-          sudo apt-get install -y ffmpeg
-          pip install piper-tts ffmpeg-python
+          sudo apt-get install -y ffmpeg wget
+          pip install piper-tts flask ffmpeg-python
           if [ -f "requirements.txt" ]; then pip install -r requirements.txt; fi
 
-      - name: Chay app.py tao audio
+      - name: Tai model giong doc Ngoc Huyen (Piper)
+        run: |
+          mkdir -p models
+          cd models
+          wget -q -O vi_VN-25hours_single-low.onnx https://huggingface.co/rhasspy/piper-voices/resolve/main/vi/vi_VN/25hours_single/low/vi_VN-25hours_single-low.onnx || true
+          wget -q -O vi_VN-25hours_single-low.onnx.json https://huggingface.co/rhasspy/piper-voices/resolve/main/vi/vi_VN/25hours_single/low/vi_VN-25hours_single-low.onnx.json || true
+
+      - name: Tao file audio MP3
         run: |
           FILE_NAME="${{ github.event.inputs.text_file }}"
           SPEED_INPUT="${{ github.event.inputs.speed_choice }}"
           SPEED=$(echo $SPEED_INPUT | awk '{print $1}')
 
-          # Chạy file app.py của repository ngoc-huyen-studio
-          python app.py --file "$FILE_NAME" || python app.py
-
-          # Tìm file audio vừa xuất ra
-          TEMP_FILE=$(ls *.wav *.mp3 2>/dev/null | head -n 1)
-
-          if [ -n "$TEMP_FILE" ]; then
-            ffmpeg -i "$TEMP_FILE" -filter:a "atempo=$SPEED" -vn audio_ngoc_huyen.mp3 -y
-          else
-            echo "Khong tim thay file audio xuat ra tu app.py!"
+          if [ ! -f "$FILE_NAME" ]; then
+            echo "Khong tim thay file $FILE_NAME!"
             exit 1
           fi
+
+          # Su dung truc tiep piper de tao audio tu file van ban
+          cat "$FILE_NAME" | piper --model models/vi_VN-25hours_single-low.onnx --output_file raw_output.wav
+
+          # Thay doi toc do doc qua ffmpeg va xuat file MP3
+          ffmpeg -i raw_output.wav -filter:a "atempo=$SPEED" -vn audio_ngoc_huyen.mp3 -y
 
       - name: Tai file MP3 ve
         uses: actions/upload-artifact@v4
